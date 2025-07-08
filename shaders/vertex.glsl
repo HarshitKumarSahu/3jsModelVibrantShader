@@ -87,8 +87,7 @@ float cnoise(vec3 P){
 
 void main() {
   vUv = uv;
-  // vBary = aBary;
-  // vNormal = normalize(normalMatrix * normal);
+  vNormal = normal;
 
   // float noisy = mouse * pow(cnoise(vNormal + time), 3.);
   // vec3 newPosition = position + noisy * normal ;

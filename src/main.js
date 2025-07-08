@@ -4,18 +4,17 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import fragment from "../shaders/fragment.glsl";
 // import fragment1 from "../shaders/fragment1.glsl";
 import vertex from "../shaders/vertex.glsl";
-// import * as dat from "dat.gui";
 import gsap from "gsap";
 
 // let modelSrc=  "../public/models/hand.glb"
 import modelSrc from "../public/models/hand.glb"
+import texture01 from "../public/textures/texture01.jpg"
 
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 // import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 // import { PostProcessing } from './postprocessing';
 
-// import landscape from "/texture/6.jpg";
 class Sketch {
     constructor(options) {
         this.scene = new THREE.Scene();
@@ -56,7 +55,6 @@ class Sketch {
         this.resize();
         this.render();
         this.setupResize();
-        // this.settings();
     }
 
     // mouseEvent() {
@@ -72,14 +70,14 @@ class Sketch {
     //   })
     // }
 
-    // addPost() {
-    //   this.composer = new EffectComposer(this.renderer);
-    //   this. composer.addPass(new RenderPass(this.scene, this.camera));
-    //   this.customPass = new ShaderPass( PostProcessing );
-    //   this.customPass.uniforms[ "resolution" ].value = new THREE.Vector2( window.innerWidth, window.innerHeight );
-    //   this.customPass.uniforms[ "resolution" ].value.multiplyScalar(window.devicePixelRatio); 
-    //   this.composer.addPass(this.customPass)
-    // }
+    addPost() {
+      this.composer = new EffectComposer(this.renderer);
+      this. composer.addPass(new RenderPass(this.scene, this.camera));
+      this.customPass = new ShaderPass( PostProcessing );
+      this.customPass.uniforms[ "resolution" ].value = new THREE.Vector2( window.innerWidth, window.innerHeight );
+      this.customPass.uniforms[ "resolution" ].value.multiplyScalar(window.devicePixelRatio); 
+      this.composer.addPass(this.customPass)
+    }
 
     addObjects() {
         // const t = new THREE.TextureLoader().load(landscape);
@@ -96,6 +94,9 @@ class Sketch {
             // landscape: { value: t },
             resolution: { type: "v4", value: new THREE.Vector4() },
             uvRate1: { value: new THREE.Vector2(1, 1) },
+            uTexture : {
+                value: new THREE.TextureLoader().load(texture01)
+            }
         },
         vertexShader: vertex,
         fragmentShader: fragment,
@@ -134,7 +135,7 @@ class Sketch {
         
         this.plain = new THREE.Mesh(this.geometry, this.material);
         // this.icoLines = new THREE.Mesh(this.geometry1, this.material1);
-        this.scene.add(this.plain);
+        // this.scene.add(this.plain);
         // this.scene.add(this.icoLines);
     }
 
@@ -197,7 +198,7 @@ class Sketch {
 
     render() {
         if (!this.isPlaying) return;
-        this.time += 0.001;
+        this.time += 0.01;
         // this.mouse -= (this.mouse - this.speed)*0.05;
         // this.speed *= 0.55
         // this.scene.rotation.x = this.time;
