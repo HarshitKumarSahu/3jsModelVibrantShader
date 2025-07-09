@@ -139,6 +139,29 @@ float cnoise(vec4 P, vec4 rep){
   return 2.2 * n_xyzw;
 }
 
+// void main() {
+//     float diffusion = dot(vNormal, vec3(1.));
+//     float diff = dot(vec3(1.),vNormal);
+
+//     float phi = acos(vNormal.y);
+//     float angle = atan(vNormal.x, vNormal.z);
+
+//     float fresnel = dot(cameraPosition, vNormal);
+//     fresnel =  fresnel * fresnel * fresnel;
+
+//     vec2 newFakeUV = vec2((angle / PI)/(2. / PI), phi / PI);
+    
+//     float diffPlusOne = dot(vec3(1.),vNormal);
+//     float diffMinsOne = dot(vec3(-1., 0., 1.),vNormal);
+
+//     vec2 fakeUV = vec2(diffPlusOne, diffMinsOne);
+//     // fakeUV = abs(fakeUV);
+
+//     fakeUV = fract(fakeUV + vec2(time / 4. , time / 2.));
+  
+//     vec4 texture = texture2D(uTexture, newFakeUV + 0.2 * cnoise(vec4(fakeUV * 5. , time , 0.), vec4(5.)));
+//     gl_FragColor = vec4(mix(vec3(1.), texture.rgb , fresnel), 1.);   
+// }
 void main() {
     float diffusion = dot(vNormal, vec3(1.));
     float diff = dot(vec3(1.),vNormal);
@@ -147,18 +170,23 @@ void main() {
     float angle = atan(vNormal.x, vNormal.z);
 
     float fresnel = dot(cameraPosition, vNormal);
-    fresnel =  fresnel * fresnel * fresnel;
+    fresnel =  fresnel * fresnel / 2.5;
 
     vec2 newFakeUV = vec2((angle / PI)/(2. / PI), phi / PI);
+    newFakeUV = abs(newFakeUV);
     
     float diffPlusOne = dot(vec3(1.),vNormal);
     float diffMinsOne = dot(vec3(-1., 0., 1.),vNormal);
 
     vec2 fakeUV = vec2(diffPlusOne, diffMinsOne);
-    // fakeUV = abs(fakeUV);
+    fakeUV = abs(fakeUV);
 
     fakeUV = fract(fakeUV + vec2(time / 4. , time / 2.));
   
-    vec4 texture = texture2D(uTexture, newFakeUV + 0.2 * cnoise(vec4(fakeUV * 5. , time , 0.), vec4(5.)));
+    // vec4 texture = texture2D(uTexture, newFakeUV + 0.5 * cnoise(vec4(fakeUV * 5. , time , 5.), vec4(5.)));
+    // gl_FragColor = vec4(mix(vec3(1.), texture.rgb , fresnel), 1.);   
+
+    vec4 texture = texture2D(uTexture, newFakeUV + 0.5 * cnoise(vec4(fakeUV * 5. , time / 10. , 5.), vec4(fresnel / 100.)));
     gl_FragColor = vec4(mix(vec3(1.), texture.rgb , fresnel), 1.);   
+    // gl_FragColor = vec4(mix(vec3(1.), texture.rgb , 1.), 1.);     
 }

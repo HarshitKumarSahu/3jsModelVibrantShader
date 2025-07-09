@@ -2,14 +2,14 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 // import fragment from "../shaders/fragment.glsl";
-import fragment from "../shaders/fragment1.glsl";
+import fragment from "../shaders/fragment.glsl";
 import vertex from "../shaders/vertex.glsl";
 import gsap from "gsap";
 
 // let modelSrc=  "../public/models/hand.glb"
 import modelSrc from "../public/models/hand.glb"
-import texture01 from "../public/textures/texture01.jpg"
-// import texture01 from "../public/textures/ok.jpg"
+// import texture01 from "../public/textures/texture01.jpg"
+import texture01 from "../public/textures/new.webp"
 
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 // import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';

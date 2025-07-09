@@ -2,11 +2,14 @@ varying vec3 vNormal;
 varying vec2 vUv;
 uniform sampler2D uTexture;
 uniform float time;
+uniform float uNoiseScale;
+uniform float uNoiseSpeed;
+uniform vec2 mousePos;
 float PI = 3.14159265358979323846;
 
-vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
-vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
-vec4 fade(vec4 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
+vec4 permute(vec4 x) { return mod(((x * 34.0) + 1.0) * x, 289.0); }
+vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+vec4 fade(vec4 t) { return t * t * t * (t * (t * 6.0 - 15.0) + 10.0); }
 
 // Classic Perlin noise, periodic version
 float cnoise(vec4 P, vec4 rep){
@@ -140,27 +143,30 @@ float cnoise(vec4 P, vec4 rep){
   return 2.2 * n_xyzw;
 }
 
+
 void main() {
     float diffusion = dot(vNormal, vec3(1.));
-    float diff = dot(vec3(1.),vNormal);
+    float diff = dot(vec3(1.), vNormal);
 
     float phi = acos(vNormal.y);
     float angle = atan(vNormal.x, vNormal.z);
 
     float fresnel = dot(cameraPosition, vNormal);
-    // fresnel =  fresnel * fresnel * fresnel;
 
-    vec2 newFakeUV = vec2((angle / PI)/(2. / PI), phi / PI);
-    
-    float diffPlusOne = dot(vec3(1.),vNormal);
-    float diffMinsOne = dot(vec3(-1., 0., 1.),vNormal);
+    vec2 newFakeUV = vec2((angle / PI) / (2. / PI), phi / PI);
+
+    float diffPlusOne = dot(vec3(1.), vNormal);
+    float diffMinsOne = dot(vec3(-1., 0., 1.), vNormal);
 
     vec2 fakeUV = vec2(diffPlusOne, diffMinsOne);
     fakeUV = abs(fakeUV);
 
-    fakeUV = fract(fakeUV + vec2(time / 6. , time / 3.));
-  
-    vec4 texture = texture2D(uTexture, newFakeUV + 0.2 * cnoise(vec4(fakeUV * 5. , time , 0.), vec4(5.)));
-    gl_FragColor = vec4(mix(vec3(1.), texture.rgb , fresnel), 1.);   
-    // gl_FragColor = vec4(texture);   
+    fakeUV = fract(fakeUV + vec2(time / 6., time / 3.));
+
+    float mouseInfluence = smoothstep(0.1, 0.5, length(newFakeUV - mousePos));
+    vec4 texture = texture2D(uTexture, newFakeUV + 0.2 * cnoise(vec4(fakeUV * uNoiseScale, time * uNoiseSpeed, 0.), vec4(5.)));
+    vec3 color = texture.rgb;
+    color = color * 1.2 - 0.1; // Increase contrast
+    color = clamp(color, 0.0, 1.0);
+    gl_FragColor = vec4(mix(vec3(1.), color, fresnel * mouseInfluence), 1.);
 }
