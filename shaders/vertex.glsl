@@ -3,11 +3,12 @@ uniform float mouse;
 varying vec2 vUv;
 varying vec3 vPosition;
 uniform vec2 pixels;
-varying vec3 vNormal;
+// varying vec3 vNormal;
+varying vec3 vCustomNormal;
 varying vec3 eyeVector;
 varying vec3 vBary;
 attribute vec3 aBary;
-float PI = 3.141592653589793238;
+// float PI = 3.141592653589793238;
 
 //	Classic Perlin 3D Noise 
 //	by Stefan Gustavson (https://github.com/stegu/webgl-noise)
@@ -87,7 +88,8 @@ float cnoise(vec3 P){
 
 void main() {
   vUv = uv;
-  vNormal = normal;
+//   vNormal = normal;
+    vCustomNormal = normal;
 
   // float noisy = mouse * pow(cnoise(vNormal + time), 3.);
   // vec3 newPosition = position + noisy * normal ;

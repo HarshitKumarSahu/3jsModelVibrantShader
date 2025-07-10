@@ -1,13 +1,13 @@
-uniform float time;
-uniform vec2 mouse; // Changed to vec2 for mouse coordinates
-varying vec2 vUv;
-varying vec3 vPosition;
-uniform vec2 pixels;
-varying vec3 vNormal;
-varying vec3 eyeVector;
-varying vec3 vBary;
-attribute vec3 aBary;
-float PI = 3.141592653589793238;
+// uniform float time;
+// uniform vec2 mouse; // Changed to vec2 for mouse coordinates
+// varying vec2 vUv;
+// varying vec3 vPosition;
+// uniform vec2 pixels;
+// varying vec3 vNormal;
+// varying vec3 eyeVector;
+// varying vec3 vBary;
+// attribute vec3 aBary;
+// float PI = 3.141592653589793238;
 
 // Classic Perlin 3D Noise 
 // by Stefan Gustavson (https://github.com/stegu/webgl-noise)
@@ -83,16 +83,73 @@ float cnoise(vec3 P){
   return 2.2 * n_xyz;
 }
 
+// varying vec3 vCustomNormal;
+// varying vec2 vUv;
+
+// void main() {
+//   vUv = uv;
+//   vCustomNormal = normalMatrix * normal; // Transform normal to view space
+
+//   // Ensure model transformations are applied correctly
+//   vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+//   gl_Position = projectionMatrix * mvPosition;
+// }
+
+// #ifdef USE_SKINNING
+//   #include <skinbase_vertex>
+//   #include <skinning_vertex>
+// #endif
+
+// varying vec3 vCustomNormal;
+// varying vec2 vUv;
+
+// void main() {
+//   vUv = uv;
+
+//   #ifdef USE_SKINNING
+//     // Apply skinning transformations for bones
+//     vec4 skinVertex = vec4(position, 1.0);
+//     vec4 skinned = vec4(0.0);
+//     skinned += dot(skinVertex, skinWeight) * skinMatrix;
+//     vec3 transformedPosition = skinned.xyz;
+//     vec3 transformedNormal = normalize((skinned * vec4(normal, 0.0)).xyz);
+//     vCustomNormal = normalize(normalMatrix * transformedNormal);
+//   #else
+//     // Fallback for non-skinned meshes
+//     vec3 transformedPosition = position;
+//     vCustomNormal = normalize(normalMatrix * normal);
+//   #endif
+
+//   // Transform position to view space
+//   vec4 mvPosition = modelViewMatrix * vec4(transformedPosition, 1.0);
+//   gl_Position = projectionMatrix * mvPosition;
+// }
+
+
+#ifdef USE_SKINNING
+  #include <skinbase_vertex>
+  #include <skinning_vertex>
+#endif
+
+varying vec3 vCustomNormal;
+varying vec2 vUv;
+
 void main() {
   vUv = uv;
-  vNormal = normal;
 
-  // Mouse-driven distortion using noise
-  float mouseInfluence = length(mouse); // Magnitude of mouse position
-  float noisy = 0.8 * mouseInfluence * cnoise(position + vec3(mouse * 0.5, time * 0.2));
-  vec3 newPosition = position + noisy * normal;
-  vec4 worldPosition = modelMatrix * vec4(newPosition, 1.0);
-  eyeVector = normalize(worldPosition.xyz - cameraPosition);
+  #ifdef USE_SKINNING
+    // Apply skinning transformations (position and normal)
+    vec3 transformed = vec3(position);
+    vec3 transformedNormal = normal;
+    #include <skinning_vertex> // Modifies 'transformed' and 'transformedNormal'
+    vCustomNormal = normalize(normalMatrix * transformedNormal);
+  #else
+    // Fallback for non-skinned meshes
+    vec3 transformed = position;
+    vCustomNormal = normalize(normalMatrix * normal);
+  #endif
 
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+  // Transform position to view space
+  vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.0);
+  gl_Position = projectionMatrix * mvPosition;
 }
