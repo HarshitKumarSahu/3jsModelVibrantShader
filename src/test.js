@@ -588,7 +588,7 @@ import CustomShaderMaterial from "three-custom-shader-material/vanilla";
 import { GLTFLoader, ThreeMFLoader } from "three/examples/jsm/Addons.js";
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
-import fragment from "../shaders/fragment1.glsl";
+import fragment from "../shaders/fragment.glsl";
 import vertex from "../shaders/vertex1.glsl";
 
 import gsap from "gsap";
@@ -626,7 +626,7 @@ class Sketch {
         1000
         );
         this.camera.position.set(0, 0, 3.5);
-        // this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
 
         this.time = 0;
         this.isPlaying = true;
@@ -666,31 +666,47 @@ class Sketch {
             this.target.position.set(this.intersectionPoints.x * 0.2, this.intersectionPoints.y * 0.2, 2)
 
 
-            this.material.uniforms.mouse.value.set(this.mouse.x, this.mouse.y);
+            this.material1.uniforms.mouse.value.set(this.mouse.x, this.mouse.y);
         });
     }
 
     addObjects() {
-        this.material = new THREE.ShaderMaterial({
+        // this.material = new THREE.ShaderMaterial({
+        //     extensions: {
+        //         derivatives: "#extension GL_OES_standard_derivatives : enable",
+        //     },
+        //     side: THREE.DoubleSide,
+        //     // skinning: true,
+        //     uniforms: {
+        //         time: { value: 0 },
+        //         mouse: { value: new THREE.Vector2(0, 0) }, 
+        //         resolution: { value: new THREE.Vector4() },
+        //         uvRate1: { value: new THREE.Vector2(1, 1) },
+        //         uTexture: {
+        //             value: new THREE.TextureLoader().load(texture01)
+        //         },
+        //     },
+        //     vertexShader: vertex,
+        //     fragmentShader: fragment,
+        //     skinning: true
+        // });
+        
+        this.material1 = new THREE.ShaderMaterial({
             extensions: {
                 derivatives: "#extension GL_OES_standard_derivatives : enable",
             },
             side: THREE.DoubleSide,
-            // skinning: true,
             uniforms: {
                 time: { value: 0 },
-                mouse: { value: new THREE.Vector2(0, 0) }, 
+                mouse: { value: new THREE.Vector2(0, 0) },
                 resolution: { value: new THREE.Vector4() },
                 uvRate1: { value: new THREE.Vector2(1, 1) },
-                uTexture: {
-                    value: new THREE.TextureLoader().load(texture01)
-                },
+                uTexture: { value: new THREE.TextureLoader().load(texture01) },
             },
             vertexShader: vertex,
             fragmentShader: fragment,
-            skinning: true
+            skinning: true, // Ensure skinning is enabled
         });
-        
 
         this.geometry = new THREE.PlaneGeometry(1, 1);
         this.standardMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
@@ -721,7 +737,7 @@ class Sketch {
                 // })
                 this.model.traverse(o => {
                     if (o.isMesh && o.isSkinnedMesh) {
-                        o.material = this.material; // Apply custom shader material
+                        o.material = this.material1; // Apply custom shader material
                         o.material.needsUpdate = true; // Ensure material updates
                     }
                     console.log(o.name, o.type);
@@ -786,6 +802,22 @@ class Sketch {
 
 
         //smooth    
+        // if (this.head) {
+        //     const targetWorldPos = new THREE.Vector3();
+        //     this.target.getWorldPosition(targetWorldPos);
+            
+        //     const headWorldPos = new THREE.Vector3();
+        //     this.head.getWorldPosition(headWorldPos);
+            
+        //     const direction = new THREE.Vector3().subVectors(targetWorldPos, headWorldPos).normalize();
+                
+        //     const quaternion = new THREE.Quaternion().setFromUnitVectors(
+        //         new THREE.Vector3(0, 0, 1), // Forward vector in model space
+        //         direction
+        //     );
+            
+        //     this.head.quaternion.slerp(quaternion, 0.2); // smooth blend
+        // }
         if (this.head) {
             const targetWorldPos = new THREE.Vector3();
             this.target.getWorldPosition(targetWorldPos);
@@ -794,13 +826,13 @@ class Sketch {
             this.head.getWorldPosition(headWorldPos);
             
             const direction = new THREE.Vector3().subVectors(targetWorldPos, headWorldPos).normalize();
-                
+            
             const quaternion = new THREE.Quaternion().setFromUnitVectors(
                 new THREE.Vector3(0, 0, 1), // Forward vector in model space
                 direction
             );
             
-            this.head.quaternion.slerp(quaternion, 0.2); // smooth blend
+            this.head.quaternion.slerp(quaternion, 0.075); // Smooth blend
         }
 
             // console.log("Head object:", this.head);
@@ -815,10 +847,12 @@ class Sketch {
 
         this.time += 0.01;
         // if(this.head) {
-        //     this.head.rotation.y += 0.01
+        //     this.model.rotation.y += 0.001
         // }
-        this.material.uniforms.time.value = this.time;
-        this.material.uniforms.cameraPosition = { value: this.camera.position };
+        // this.material.uniforms.time.value = this.time;
+        // this.material.uniforms.cameraPosition = { value: this.camera.position };
+        this.material1.uniforms.time.value = this.time;
+        this.material1.uniforms.cameraPosition = { value: this.camera.position };
         this.renderer.render(this.scene, this.camera);
         requestAnimationFrame(this.render.bind(this));
     }
