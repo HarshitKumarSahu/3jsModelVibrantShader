@@ -19,7 +19,7 @@ html, body {
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: #222;
+  /* background-color: #222; */
 }
 .canvas {
   position: fixed;
@@ -32,4 +32,12 @@ html, body {
 }
 nav {
   z-index: 99;
+}
+video {
+    z-index: 999;
+    /* width: 60%;
+    height: 60%; */
+    position: absolute;
+    top: 0;
+    left: 0;
 }
