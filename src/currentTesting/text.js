@@ -720,339 +720,6 @@
 // });
 
 
-// import * as THREE from "three";
-// import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-// import CustomShaderMaterial from "three-custom-shader-material/vanilla";
-// import { GLTFLoader, ThreeMFLoader } from "three/examples/jsm/Addons.js";
-// import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-// import * as dat from 'dat.gui';
-// import { FaceMesh } from '@mediapipe/face_mesh';
-// import { Camera } from '@mediapipe/camera_utils';
-// import fragment from "../../shaders/currentTesting/fragment.glsl";
-// import vertex from "../../shaders/currentTesting/vertex.glsl";
-// import gsap from "gsap";
-// import modelSrc from "../../public/models/ManAminate.glb";
-// import texture01 from "../../public/textures/new.webp";
-
-// class Sketch {
-//     constructor(options) {
-//         this.scene = new THREE.Scene();
-//         this.container = options.dom;
-//         this.width = this.container.offsetWidth;
-//         this.height = this.container.offsetHeight;
-
-//         this.renderer = new THREE.WebGLRenderer({
-//             alpha: true,
-//             antialias: true,
-//         });
-//         this.renderer.setPixelRatio(window.devicePixelRatio);
-//         this.renderer.setSize(this.width, this.height);
-//         this.renderer.physicallyCorrectLights = true;
-//         this.renderer.outputEncoding = THREE.sRGBEncoding;
-
-//         this.container.appendChild(this.renderer.domElement);
-
-//         this.camera = new THREE.PerspectiveCamera(
-//             70,
-//             this.width / this.height,
-//             0.001,
-//             1000
-//         );
-//         this.camera.position.set(0, 0, 3.5);
-//         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-
-//         this.time = 0;
-//         this.isPlaying = true;
-//         this.head = null;
-//         this.bones = {};
-
-//         this.target = new THREE.Object3D();
-//         this.mouse = new THREE.Vector2(0, 0);
-//         this.intersectionPoints = new THREE.Vector3();
-//         this.plainNormal = new THREE.Vector3();
-//         this.mousePlain = new THREE.Plane();
-//         this.rayCaster = new THREE.Raycaster();
-
-//         this.loader = new GLTFLoader();
-//         this.dracoLoader = new DRACOLoader();
-//         this.dracoLoader.setDecoderPath('./draco/');
-//         this.loader.setDRACOLoader(this.dracoLoader);
-
-//         // MediaPipe FaceMesh setup
-//         this.videoElement = document.createElement('video');
-//         // this.videoElement.style.display = 'none';
-//         this.videoElement.style.transform = 'scaleX(-1)'; // Unmirror the video feed
-//         document.body.appendChild(this.videoElement);
-//         this.faceMesh = new FaceMesh({
-//             locateFile: (file) => `/mediapipe/face_mesh/${file}`,
-//         });
-//         this.faceMesh.setOptions({
-//             maxNumFaces: 1,
-//             refineLandmarks: true,
-//             minDetectionConfidence: 0.5,
-//             minTrackingConfidence: 0.5,
-//         });
-//         this.faceMesh.onResults(this.onFaceMeshResults.bind(this));
-//         this.cameraUtils = new Camera(this.videoElement, {
-//             onFrame: async () => {
-//                 await this.faceMesh.send({ image: this.videoElement });
-//             },
-//             width: 320,
-//             height: 240,
-//             facingMode: 'user', // Front-facing camera
-//         });
-//         this.headRotation = { yaw: 0, pitch: 0, roll: 0 };
-//         this.smoothedHeadRotation = { yaw: 0, pitch: 0, roll: 0 };
-
-//         this.addObjects();
-//         this.addModel();
-//         this.setupGUI();
-//         this.resize();
-//         this.render();
-//         this.setupResize();
-//         this.setupMouse();
-//         this.startWebcam();
-//     }
-
-//     async startWebcam() {
-//         try {
-//             await this.cameraUtils.start();
-//         } catch (error) {
-//             console.error('Error starting webcam:', error);
-//         }
-//     }
-
-//     onFaceMeshResults(results) {
-//         if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-//             const landmarks = results.multiFaceLandmarks[0];
-//             const noseTip = landmarks[1];
-//             const chin = landmarks[152];
-//             const leftEye = landmarks[33];
-//             const rightEye = landmarks[263];
-//             const leftMouth = landmarks[61];
-//             const rightMouth = landmarks[291];
-
-//             console.log('Landmarks:', { noseTip, chin, leftEye, rightEye });
-
-//             const modelPoints = [
-//                 [0.0, 0.0, 0.0], // Nose tip
-//                 [0.0, -6.0, -2.0], // Chin
-//                 [-4.0, 2.0, -2.0], // Left eye outer
-//                 [4.0, 2.0, -2.0], // Right eye outer
-//                 [-2.0, -2.0, -1.0], // Left mouth
-//                 [2.0, -2.0, -1.0], // Right mouth
-//             ];
-
-//             const imagePoints = [
-//                 [(noseTip.x - 0.5) * 2, -(noseTip.y - 0.5) * 2],
-//                 [(chin.x - 0.5) * 2, -(chin.y - 0.5) * 2],
-//                 [(leftEye.x - 0.5) * 2, -(leftEye.y - 0.5) * 2],
-//                 [(rightEye.x - 0.5) * 2, -(rightEye.y - 0.5) * 2],
-//                 [(leftMouth.x - 0.5) * 2, -(leftMouth.y - 0.5) * 2],
-//                 [(rightMouth.x - 0.5) * 2, -(rightMouth.y - 0.5) * 2],
-//             ];
-
-//             const dx = rightEye.x - leftEye.x;
-//             const dy = rightEye.y - leftEye.y;
-//             const yaw = -Math.atan2(dx, 0.5); // Negate to correct for unmirrored feed
-//             const pitch = Math.atan2(chin.y - noseTip.y, 0.5) * -0.5;
-//             const roll = Math.atan2(dy, dx) * 0.5;
-
-//             const alpha = 0.2;
-//             this.smoothedHeadRotation.yaw = (1 - alpha) * this.smoothedHeadRotation.yaw + alpha * yaw;
-//             this.smoothedHeadRotation.pitch = (1 - alpha) * this.smoothedHeadRotation.pitch + alpha * pitch;
-//             this.smoothedHeadRotation.roll = (1 - alpha) * this.smoothedHeadRotation.roll + alpha * roll;
-
-//             console.log('Smoothed Head Rotation:', this.smoothedHeadRotation);
-//         } else {
-//             this.smoothedHeadRotation = { yaw: 0, pitch: 0, roll: 0 };
-//         }
-//     }
-
-//     setupGUI() {
-//         this.gui = new dat.GUI();
-//         this.gui.closed = false;
-
-//         const bonesToControl = [
-//             'shoulderL',
-//             'upper_armL',
-//             'forearmL',
-//             'handL',
-//             'palm01L',
-//             'f_index01L',
-//             'f_index02L',
-//             'f_index03L',
-//             'thumb01L',
-//             'thumb02L',
-//             'thumb03L',
-//             'palm02L',
-//             'f_middle01L',
-//             'f_middle02L',
-//             'f_middle03L',
-//             'palm03L',
-//             'f_ring01L',
-//             'f_ring02L',
-//             'f_ring03L',
-//             'palm04L',
-//             'f_pinky01L',
-//             'f_pinky02L',
-//             'f_pinky03L',
-//         ];
-
-//         bonesToControl.forEach(boneName => {
-//             if (this.bones[boneName]) {
-//                 const folder = this.gui.addFolder(boneName);
-//                 const controls = {
-//                     rotationX: 0,
-//                     rotationY: 0,
-//                     rotationZ: 0
-//                 };
-//                 folder.add(controls, 'rotationX', -Math.PI, Math.PI, 0.01).name('Rotation X').onChange(value => {
-//                     this.bones[boneName].rotation.x = value;
-//                 });
-//                 folder.add(controls, 'rotationY', -Math.PI, Math.PI, 0.01).name('Rotation Y').onChange(value => {
-//                     this.bones[boneName].rotation.y = value;
-//                 });
-//                 folder.add(controls, 'rotationZ', -Math.PI, Math.PI, 0.01).name('Rotation Z').onChange(value => {
-//                     this.bones[boneName].rotation.z = value;
-//                 });
-//             }
-//         });
-//     }
-
-//     setupMouse() {
-//         window.addEventListener('mousemove', (event) => {
-//             this.mouse.x = (event.clientX / this.width) * 2 - 1;
-//             this.mouse.y = -(event.clientY / this.height) * 2 + 1;
-//             this.plainNormal.copy(this.camera.position).normalize();
-//             this.mousePlain.setFromNormalAndCoplanarPoint(this.plainNormal, this.scene.position);
-//             this.rayCaster.setFromCamera(this.mouse, this.camera);
-//             this.rayCaster.ray.intersectPlane(this.mousePlain, this.intersectionPoints);
-
-//             this.target.position.set(this.intersectionPoints.x * 0.2, this.intersectionPoints.y * 0.2, 2);
-//             this.material.uniforms.mouse.value.set(this.mouse.x, this.mouse.y);
-//         });
-//     }
-
-//     addObjects() {
-//         this.material = new THREE.ShaderMaterial({
-//             extensions: {
-//                 derivatives: "#extension GL_OES_standard_derivatives : enable",
-//             },
-//             side: THREE.DoubleSide,
-//             uniforms: {
-//                 time: { value: 0 },
-//                 mouse: { value: new THREE.Vector2(0, 0) },
-//                 resolution: { value: new THREE.Vector4() },
-//                 uvRate1: { value: new THREE.Vector2(1, 1) },
-//                 uTexture: { value: new THREE.TextureLoader().load(texture01) },
-//             },
-//             vertexShader: vertex,
-//             fragmentShader: fragment,
-//             skinning: true,
-//         });
-
-//         this.geometry = new THREE.PlaneGeometry(1, 1);
-//         this.standardMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-
-//         this.plain = new THREE.Mesh(this.geometry, this.material);
-//         const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-//         this.scene.add(ambientLight);
-//         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-//         directionalLight.position.set(0, 1, 1);
-//         this.scene.add(directionalLight);
-//     }
-
-//     addModel() {
-//         this.loader.load(
-//             modelSrc,
-//             (gltf) => {
-//                 this.model = gltf.scene;
-//                 this.scene.add(this.model);
-//                 this.model.traverse(o => {
-//                     if (o.isMesh && o.isSkinnedMesh) {
-//                         o.material = this.material;
-//                         o.material.needsUpdate = true;
-//                     }
-//                     if (o.isBone) {
-//                         this.bones[o.name] = o;
-//                     }
-//                     console.log(o.name, o.type);
-//                 });
-//                 this.head = this.bones['spine006'];
-//                 if (!this.head) {
-//                     console.warn('spine006 not found. Check bone hierarchy.');
-//                 }
-//                 this.model.scale.set(5, 5, 5);
-//                 this.model.position.set(0, -5.5, 0);
-//                 this.setupGUI();
-//             },
-//             undefined,
-//             (error) => {
-//                 console.error('Error loading model:', error);
-//             }
-//         );
-//     }
-
-//     setupResize() {
-//         window.addEventListener("resize", this.resize.bind(this));
-//     }
-
-//     resize() {
-//         this.width = this.container.offsetWidth;
-//         this.height = this.container.offsetHeight;
-//         this.renderer.setSize(this.width, this.height);
-//         this.camera.aspect = this.width / this.height;
-//         this.camera.updateProjectionMatrix();
-//     }
-
-//     stop() {
-//         this.isPlaying = false;
-//     }
-
-//     play() {
-//         if (!this.isPlaying) {
-//             this.render();
-//             this.isPlaying = true;
-//         }
-//     }
-
-//     render() {
-//         if (!this.isPlaying) return;
-
-//         if (this.head) {
-//             const targetQuaternion = new THREE.Quaternion();
-//             targetQuaternion.setFromEuler(
-//                 new THREE.Euler(
-//                     this.smoothedHeadRotation.pitch,
-//                     this.smoothedHeadRotation.yaw,
-//                     this.smoothedHeadRotation.roll,
-//                     'YXZ'
-//                 )
-//             );
-
-//             // Optional: Apply offset for model rest pose (uncomment if needed)
-//             // const offset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
-//             // targetQuaternion.multiply(offset);
-
-//             this.head.quaternion.slerp(targetQuaternion, 0.2);
-//         }
-
-//         this.time += 0.01;
-//         this.material.uniforms.time.value = this.time;
-//         this.material.uniforms.cameraPosition = { value: this.camera.position };
-//         this.renderer.render(this.scene, this.camera);
-//         this.controls.update();
-//         requestAnimationFrame(this.render.bind(this));
-//     }
-// }
-
-// new Sketch({
-//     dom: document.querySelector(".canvas"),
-// });
-
-
-
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import CustomShaderMaterial from "three-custom-shader-material/vanilla";
@@ -1113,24 +780,9 @@ class Sketch {
 
         // MediaPipe FaceMesh setup
         this.videoElement = document.createElement('video');
-        this.videoElement.style.position = 'absolute';
-        this.videoElement.style.top = '10px';
-        this.videoElement.style.left = '10px';
-        this.videoElement.style.width = '320px';
-        this.videoElement.style.height = '240px';
-        this.videoElement.style.transform = 'scaleX(-1)'; // Unmirror
+        // this.videoElement.style.display = 'none';
+        this.videoElement.style.transform = 'scaleX(-1)'; // Unmirror the video feed
         document.body.appendChild(this.videoElement);
-
-        // Canvas for wireframe effect
-        this.canvas = document.createElement('canvas');
-        this.canvas.style.position = 'absolute';
-        this.canvas.style.top = '10px';
-        this.canvas.style.left = '340px'; // Place next to video
-        this.canvas.width = 320;
-        this.canvas.height = 240;
-        document.body.appendChild(this.canvas);
-        this.ctx = this.canvas.getContext('2d');
-
         this.faceMesh = new FaceMesh({
             locateFile: (file) => `/mediapipe/face_mesh/${file}`,
         });
@@ -1144,11 +796,10 @@ class Sketch {
         this.cameraUtils = new Camera(this.videoElement, {
             onFrame: async () => {
                 await this.faceMesh.send({ image: this.videoElement });
-                this.drawWireframe(); // Draw wireframe effect
             },
             width: 320,
             height: 240,
-            facingMode: 'user',
+            facingMode: 'user', // Front-facing camera
         });
         this.headRotation = { yaw: 0, pitch: 0, roll: 0 };
         this.smoothedHeadRotation = { yaw: 0, pitch: 0, roll: 0 };
@@ -1169,59 +820,6 @@ class Sketch {
         } catch (error) {
             console.error('Error starting webcam:', error);
         }
-    }
-
-    drawWireframe() {
-        // Draw video to canvas
-        this.ctx.drawImage(this.videoElement, 0, 0, this.canvas.width, this.canvas.height);
-        const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        const data = imageData.data;
-
-        // Convert to grayscale
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            const gray = 0.3 * r + 0.59 * g + 0.11 * b;
-            data[i] = data[i + 1] = data[i + 2] = gray;
-        }
-
-        // Sobel edge detection
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        const outputData = new Uint8ClampedArray(data.length);
-        const sobelX = [
-            [-1, 0, 1],
-            [-2, 0, 2],
-            [-1, 0, 1]
-        ];
-        const sobelY = [
-            [-1, -2, -1],
-            [0, 0, 0],
-            [1, 2, 1]
-        ];
-
-        for (let y = 1; y < height - 1; y++) {
-            for (let x = 1; x < width - 1; x++) {
-                let gx = 0;
-                let gy = 0;
-                for (let j = -1; j <= 1; j++) {
-                    for (let i = -1; i <= 1; i++) {
-                        const idx = ((y + j) * width + (x + i)) * 4;
-                        const gray = data[idx];
-                        gx += sobelX[j + 1][i + 1] * gray;
-                        gy += sobelY[j + 1][i + 1] * gray;
-                    }
-                }
-                const magnitude = Math.sqrt(gx * gx + gy * gy);
-                const idx = (y * width + x) * 4;
-                const value = magnitude > 50 ? 255 : 0; // Threshold for wireframe
-                outputData[idx] = outputData[idx + 1] = outputData[idx + 2] = value;
-                outputData[idx + 3] = 255;
-            }
-        }
-
-        this.ctx.putImageData(new ImageData(outputData, width, height), 0, 0);
     }
 
     onFaceMeshResults(results) {
@@ -1256,11 +854,11 @@ class Sketch {
 
             const dx = rightEye.x - leftEye.x;
             const dy = rightEye.y - leftEye.y;
-            const yaw = -Math.atan2(dx, 0.5);
-            const pitch = Math.atan2(chin.y - noseTip.y, 0.5);
+            const yaw = -Math.atan2(dx, 0.5); // Negate to correct for unmirrored feed
+            const pitch = Math.atan2(chin.y - noseTip.y, 0.5) * -0.5;
             const roll = Math.atan2(dy, dx) * 0.5;
 
-            const alpha = 0.3;
+            const alpha = 0.2;
             this.smoothedHeadRotation.yaw = (1 - alpha) * this.smoothedHeadRotation.yaw + alpha * yaw;
             this.smoothedHeadRotation.pitch = (1 - alpha) * this.smoothedHeadRotation.pitch + alpha * pitch;
             this.smoothedHeadRotation.roll = (1 - alpha) * this.smoothedHeadRotation.roll + alpha * roll;
@@ -1433,7 +1031,7 @@ class Sketch {
                 )
             );
 
-            // Optional: Apply offset for model rest pose
+            // Optional: Apply offset for model rest pose (uncomment if needed)
             // const offset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
             // targetQuaternion.multiply(offset);
 
@@ -1452,15 +1050,6 @@ class Sketch {
 new Sketch({
     dom: document.querySelector(".canvas"),
 });
-
-
-
-
-
-
-
-
-
 
 
 
