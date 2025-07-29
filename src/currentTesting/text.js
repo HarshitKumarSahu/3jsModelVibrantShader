@@ -811,7 +811,7 @@ class Sketch {
         this.render();
         this.setupResize();
         this.setupMouse();
-        this.startWebcam();
+        // this.startWebcam();
     }
 
     async startWebcam() {
@@ -1020,22 +1020,41 @@ class Sketch {
     render() {
         if (!this.isPlaying) return;
 
+        // camera
+        // if (this.head) {
+        //     const targetQuaternion = new THREE.Quaternion();
+        //     targetQuaternion.setFromEuler(
+        //         new THREE.Euler(
+        //             this.smoothedHeadRotation.pitch,
+        //             this.smoothedHeadRotation.yaw,
+        //             this.smoothedHeadRotation.roll,
+        //             'YXZ'
+        //         )
+        //     );
+
+        //     // Optional: Apply offset for model rest pose (uncomment if needed)
+        //     // const offset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
+        //     // targetQuaternion.multiply(offset);
+
+        //     this.head.quaternion.slerp(targetQuaternion, 0.2);
+        // }
+
+        //mouse
         if (this.head) {
-            const targetQuaternion = new THREE.Quaternion();
-            targetQuaternion.setFromEuler(
-                new THREE.Euler(
-                    this.smoothedHeadRotation.pitch,
-                    this.smoothedHeadRotation.yaw,
-                    this.smoothedHeadRotation.roll,
-                    'YXZ'
-                )
+            const targetWorldPos = new THREE.Vector3();
+            this.target.getWorldPosition(targetWorldPos);
+            
+            const headWorldPos = new THREE.Vector3();
+            this.head.getWorldPosition(headWorldPos);
+            
+            const direction = new THREE.Vector3().subVectors(targetWorldPos, headWorldPos).normalize();
+            
+            const quaternion = new THREE.Quaternion().setFromUnitVectors(
+                new THREE.Vector3(0, 0, 1), // Forward vector in model space
+                direction
             );
-
-            // Optional: Apply offset for model rest pose (uncomment if needed)
-            // const offset = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
-            // targetQuaternion.multiply(offset);
-
-            this.head.quaternion.slerp(targetQuaternion, 0.2);
+            
+            this.head.quaternion.slerp(quaternion, 0.075); // Smooth blend
         }
 
         this.time += 0.01;
